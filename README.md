@@ -30,5 +30,6 @@ python manage.py startapp main
    python manage.py startapp todo_item
 2. Закомитить и запушить изменения в GIT
 3. Прислать ссылку с pull reqest
+вида https://github.com/sergkot2020/todo/pull/1
 4. Установить Postgresql 
 ```
