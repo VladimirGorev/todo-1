@@ -23,8 +23,12 @@ django-admin startproject todo
 python manage.py startapp main
 ```
 
+
 ДЗ
 ```
-
-
+1. Создать еще один app "todo_item"
+   python manage.py startapp todo_item
+2. Закомитить и запушить изменения в GIT
+3. Прислать ссылку с pull reqest
+4. Установить Postgresql 
 ```
