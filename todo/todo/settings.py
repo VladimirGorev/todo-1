@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+DIV_COUNT = 6
 
 # Application definition
 

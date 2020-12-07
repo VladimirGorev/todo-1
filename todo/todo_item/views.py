@@ -9,7 +9,7 @@ data_list = {
         {'name': 'Создать папку templatetags', 'is_done': False}
     ],
     'user_name': 'Admin',
-    'name_list': 'Список дел'
+    'list_name': 'По работе'
 }
 
 

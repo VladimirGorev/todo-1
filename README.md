@@ -232,3 +232,154 @@ INSTALLED_APPS = [
 ```
 И подгрузить библиотеку тегов на страницу шаблона:  
 ![dir](img/3.png)
+
+# УРОК №3
+## План урока
+- Разбор ДЗ
+    - про имена переменных\функций
+    - константы
+    - докстринги
+    - перенос длинных строк
+    - глубина вложенности условий (менье 4)
+```python
+@register.simple_tag()
+def printitems():
+    if len(data['lists']) > 6:
+        for i in range(len(data['lists'])):
+            return items(data['lists'][i])
+    else:
+        for i in range(len(data['lists'])):
+            return items(data['lists'][i])
+
+def items(dictt):
+    if dictt['is_done']:
+        return mark_safe(TABLE_HEADER + '''<a href="#"><li class="is_done_text">''' + dictt['name'] + '''</li></a></div>''' + TABLE_TAIL)
+    else:
+        return mark_safe(TABLE_HEADER + '''<a href="#"><li>''' + dictt['name'] + '''</li></a></div>''' + TABLE_TAIL)
+```
+- пакетные зависимости  
+    pip freeze > requirements. txt 
+- служебный таблицы Django (пользователь \ хранение паролей)
+- Пользовательские сессии
+- Куки
+
+- Наследование шаблонов
+- Оптимизация роутинга URL-адресов
+- DEBUG Pycharm
+    - Навигация 
+    - Debug циклов
+    - Watches
+------------------------------------------------------------------------------
+## Наследование шаблонов
+- теги block, extend
+```
+{% extends 'master.html' %}
+
+{% block title %}
+    <title>Главная</title>
+{% endblock %}
+
+{% block name_list %}
+    <div class="table-data_table-header-item-1">TO DO List</div>
+{% endblock %}
+```
+## Оптимизация роутинга URL
+- функций include, и app_name = 'main'
+```python
+
+
+# \todo\todo\urls.py
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('main.urls')),
+    path('list/', include('list.urls')),
+]
+
+# \todo\main\urls.py
+app_name = 'main'
+
+urlpatterns = [
+    path('', main_view, name='main'),
+    path('create/', create_new_list, name='create')
+]
+```
+- Обрашение в темплейте по app_name
+```python
+ <a href='{% url "main:create" pk=list.id %}'>
+```
+
+## DEBUG
+### Запуск дебаггера
+![debugger](img/debug.png)
+### Установка break-point
+![bp](img/bp.png)
+### Панель управления
+![dash](img/dashboard.png)
+-------------------------------------------------------------------------
+## ДЗ
+- Найти причину ошибки
+    - Указать номер элемента на котором ломается алгоритм
+    - Указать сам этот элемент
+- Исправить алгоритм (чтобы функция отработала до конца и
+распечатала результат)  
+
+```python
+# Данные data.pkl
+
+# Алгоритм debug.py
+import datetime
+import pickle
+
+
+def get_array():
+    with open('data.pkl', 'rb') as file:
+        return pickle.load(file)
+
+
+def merge(left_arr, right_arr):
+    i = 0
+    j = 0
+    len_left = len(left_arr)
+    len_right = len(right_arr)
+    result = []
+    while i < len_left and j < len_right:
+        left = left_arr[i]
+        right = right_arr[j]
+        if left_arr[i] < right:
+            result.append(left)
+            i += 1
+        else:
+            result.append(right)
+            j += 1
+    result.extend(left_arr[i:])
+    result.extend(right_arr[j:])
+    return result
+
+
+def merge_sort(array):
+    e = len(array)
+    s = 0
+    if (e - s) > 1:
+        medium = int((s + e) / 2)
+        left_arr = merge_sort(array[s:medium])
+        right_arr = merge_sort(array[medium:e])
+        return merge(left_arr, right_arr)
+    return array
+
+
+def run(func, array):
+    start = datetime.datetime.now()
+    print('=' * 20, f' START {func} ', '=' * 20)
+    print('START: ', start)
+    print('first 50 sorted words:', func(array[:])[:50])
+    finish = datetime.datetime.now()
+    print('FINISH: ', finish)
+    print('RESULT: ', finish - start)
+
+
+if __name__ == '__main__':
+    arr = get_array()
+    run(merge_sort, arr)
+
+```
+
