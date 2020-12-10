@@ -21,8 +21,13 @@ pip install Django
 django-admin startproject todo
 # Создание нового app (эпликейшн)
 python manage.py startapp main
+# показать всё миграции
+python manage.py showmigrations
+# Создать миграции после изменения моделей
+python manage.py makemigrations
+# Применить миграции (создать\изменить таблицы)
+python manage.py migrate
 ```
-
 
 ДЗ
 ```
@@ -240,23 +245,7 @@ INSTALLED_APPS = [
     - константы
     - докстринги
     - перенос длинных строк
-    - глубина вложенности условий (менье 4)
-```python
-@register.simple_tag()
-def printitems():
-    if len(data['lists']) > 6:
-        for i in range(len(data['lists'])):
-            return items(data['lists'][i])
-    else:
-        for i in range(len(data['lists'])):
-            return items(data['lists'][i])
-
-def items(dictt):
-    if dictt['is_done']:
-        return mark_safe(TABLE_HEADER + '''<a href="#"><li class="is_done_text">''' + dictt['name'] + '''</li></a></div>''' + TABLE_TAIL)
-    else:
-        return mark_safe(TABLE_HEADER + '''<a href="#"><li>''' + dictt['name'] + '''</li></a></div>''' + TABLE_TAIL)
-```
+    - глубина вложенности условий (меньше 4)
 - пакетные зависимости  
     pip freeze > requirements. txt 
 - служебный таблицы Django (пользователь \ хранение паролей)
@@ -380,6 +369,145 @@ def run(func, array):
 if __name__ == '__main__':
     arr = get_array()
     run(merge_sort, arr)
-
 ```
 
+# УРОК №4
+Рассмотрим:
+- Проектирование БД 
+    - Нормальные формы таблиц\отношений   
+    https://habr.com/ru/post/254773/  
+    
+
+- Создание модели ListModel, типы данных
+- Дескрипторы
+- Подключение модели к Админке  
+- Менеджер модели objects
+- ленивый queryset
+    - когда вычисляется queryset
+--------------------------------------------------------------------------
+## Django ORM
+Архитектура MVC  
+![mvc](img/4.png)
+
+ORM (англ. Object-Relational Mapping, рус. объектно-реляционное отображение, или 
+преобразование) — технология программирования, которая 
+связывает базы данных с концепциями объектно-ориентированных языков программирования  
+
+**Django ORM Cookbook**  
+https://prglb.ru/3h66k
+
+**Офиц. документация**  
+https://docs.djangoproject.com/en/3.0/ref/models/querysets/#
+
+
+main\admin.py
+```python
+from django.contrib import admin
+from main.models import ListModel
+
+
+class ListAdmin(admin.ModelAdmin):
+    list_display = ['id', 'created', 'name', 'is_done', 'user']
+    list_filter = ['created', 'name', 'is_done', 'user']
+    search_fields = ['name', 'user']
+
+
+admin.site.register(ListModel, ListAdmin)
+```
+- Дескрипторы
+```python
+class AgeCheck:
+    """
+    Дескриптор
+    """
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __set__(self, instance, value):
+        if value < 18:
+            raise ValueError('Меньше 18 лет')
+        instance.__dict__[self.name] = value
+
+
+class Human:
+
+    age = AgeCheck()
+
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+
+man = Human('Bob', 15)
+```
+- Менеджер модели objects, и основные его методы
+```python
+item = Model.objects.get(id=1)
+items = Model.objects.filter(id=1)
+item.name = 'New name'
+item.save()
+item.delete()
+order_by('id')
+ListItem.objects.filter(list__user__username='Admin')
+
+# Создание Нового объекта в БД
+new_list = ListModel(
+        name='Новый список2',
+        user=request.user,
+
+    )
+new_list.save()
+```
+- QuerySet => SQL 
+- Ленивый QuerySet  
+
+![cat](img/5.png)
+
+- ? дебагер с SQL запросами
+```python
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    }
+}
+```
+# ДЗ
+- Оптимизировать HTML из шаблона list.html
+c использованием шаблона master.html
+
+- Создать новую модель ItemModel  
+```
+expare_date = models.DateTimeField(blank=True)
+```
+https://docs.google.com/spreadsheets/d/1He-IVLLfwQv6MOhD6RbKyt3sItyfoAXgc98_c3ZSIo8/edit?usp=sharing
+
+- Добавить  ItemModel в Админку
+    - Наполнить тестовыми данными
+    
+- Поправить view в todo_item
+    - сделать по аналогии в main получение данных из базы. 
+```
+ListModel.objects.filter(
+        user=request.user,
+        id=1
+    )
+```
