@@ -508,6 +508,6 @@ https://docs.google.com/spreadsheets/d/1He-IVLLfwQv6MOhD6RbKyt3sItyfoAXgc98_c3ZS
 ```
 ListModel.objects.filter(
         user=request.user,
-        id=1
+        list_id=1
     )
 ```
