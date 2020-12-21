@@ -4,8 +4,8 @@ from todo_item.views import item_view
 app_name = 'item'
 
 urlpatterns = [
-    path('', item_view),
-    path('create/', item_view),
+    path('<int:pk>', item_view, name='item'),
+    path('create/', item_view, name='create'),
     path('delete/', item_view),
-    path('edit/', item_view),
+    path('edit/<int:pk>', item_view),
 ]

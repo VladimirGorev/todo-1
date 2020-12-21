@@ -18,32 +18,31 @@ Python позволяет перехватить выше упомянутые �
 '''
 
 
-class AgeCheck:
-    """
-    Дескриптор
-    """
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
+class Calculator:
 
-    def __set_name__(self, owner, name):
-        self.name = name
+    def __init__(self, num):
+        self.num = num
+        self.buffer = []
 
-    def __set__(self, instance, value):
-        if value < 18:
-            raise ValueError('Меньше 18 лет')
-        instance.__dict__[self.name] = value
+    def plus(self, value):
+        self.buffer.append(
+            ('plus', value)
+        )
+        return self
 
+    def minus(self, value):
+        self.buffer.append(
+            ('minus', value)
+        )
+        return self
 
-class Human:
+    def calc(self):
+        for oper, value in self.buffer:
+            if oper == 'plus':
+                self.num += value
+            if oper == 'minus':
+                self.num -= value
+        return self.num
 
-    age = AgeCheck()
-
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-
-
-man = Human('Bob', 20)
-man.age = 15
-
-
+obj = Calculator(10)
+print(obj.plus(5).minus(5).plus(3).minus(4).calc())
