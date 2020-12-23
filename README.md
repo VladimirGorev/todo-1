@@ -563,13 +563,12 @@ if Entry.objects.filter(headline="Test"):
 
 "<int:pk>"  означает, что Django ожидает целочисленное значение и преобразует его в представление — переменную pk.
 
+# УРОК №6
 ## Django form
 ### Регистрация и логин
 https://docs.djangoproject.com/en/3.0/ref/forms/api/
 - Новое **application** для регистрации пользователей
 - Форма регистрации пользователя
-
-- Шаблон формы регистрации
 ```python
 class CustomUserCreationForm(UserCreationForm):
     """
@@ -580,7 +579,25 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
         fields = UserCreationForm.Meta.fields + ('email',)
+```
 
+- Шаблон формы регистрации + csrf 
+
+```python
+ <form class="registration_form_class" action="{% url "registration:registration" %}" id="registration_form" method="POST">
+   {% csrf_token %}
+    <p class="form_class_name-field"> Имя</p>
+      {{ form.username }}
+    <p class="form_class_name-field">e-mail</p>
+      {{ form.email }}
+    <p class="form_class_name-field"> Пароль</p>
+      {{ form.password1}}
+    <p class="form_class_name-field">Подтверждение пароля</p>
+        {{ form.password2}}
+</form>
+```
+- Форма Логина
+```python
 class LoginForm(forms.Form):
 
     login = forms.CharField(
@@ -594,11 +611,6 @@ class LoginForm(forms.Form):
         widget=forms.PasswordInput()
     )
 ```
-```python
-# Обращение в шаблоне к полям формы
- {{ form.username }}
-```
-
 - View обработка регистрационных данных
 ```python
 def create_user(request):
@@ -614,6 +626,30 @@ def create_user(request):
 
     return render(request, 'registration.html', {'form': form})
 ```  
+- View для логина
+```python
+def login_view(request):
+    """
+    Контроллер, который рендерит страницу авторизации.
+    В случае успешной авторизации редиректит на главную
+    """
+    form = LoginForm()
+
+    if request.method == 'POST':
+        form = LoginForm(data=request.POST)
+        success_url = reverse('main:main')
+
+        if form.is_valid():
+            username = form.cleaned_data.get('login')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+
+            if user and user.is_active:
+                login(request, user)
+                return redirect(success_url)
+
+    return render(request, 'login.html', {'form': form})
+```
 - ПОДСКАЗКА К ДЗ => Форма нового списка
 ```python
 class ListForm(forms.ModelForm):
@@ -629,12 +665,7 @@ class ListForm(forms.ModelForm):
 
 
 ## Д\З
-- Переделать шаблон **list.html** с наследованием от **master**
-- Сделать динамические ссылки на list_items
-![](img/6.png)
-- Сделать **list_item_view** по отрисовки эелементов списков.
-По аналогии с главной вьюхой приложения main.
-Т.е. при клике на название списка, должна открываться страница списка
+
 - Форма создания нового списка дел (кнопка "+")
 - Вьюха создания нового списка
 - Шаблон создания нового списка
