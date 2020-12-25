@@ -511,3 +511,194 @@ ListModel.objects.filter(
         list_id=1
     )
 ```
+
+# УРОК №5
+Рассмотрим:
+- Отношения один ко одному, один ко многим, многие ко многим
+- ленивый queryset
+    - когда вычисляется queryset
+ 
+- url адреса "<int:pk>" 
+- Django-form
+## Отношения один ко одному, один ко многим, многие ко многим  
+https://github.com/sergkot2020/bars_atestation/blob/master/Django.ipynb
+    
+## Когда вычисляется queryset
+
+- Итерация. QuerySet является итеративным, и он выполняет свой запрос к базе данных при первой итерации по нему. Например, это напечатает заголовок всех записей в базе данных:
+```
+for e in Entry.objects.all():
+    print(e.headline)
+```
+
+Примечание: не используйте это, если все, что вы хотите сделать, это определить, существует ли хотя бы один результат. Более эффективно использовать exists().
+
+- Срезы. Как объяснено в Ограничение QuerySet, QuerySet может быть нарезан, используя синтаксис Python для срезов массивов. Срез невычисленного QuerySet обычно возвращает другой невычисленный QuerySet, но Django выполнит запрос к базе данных, если вы используете параметр «step» синтаксиса среза, и вернет список. Срез QuerySet, который был вычислен, также возвращает список.
+Также обратите внимание, что даже если срез невычисленного QuerySet возвращает другой невычисленный QuerySet, дальнейшее его изменение (например, добавление дополнительных фильтров или изменение порядка) недопустимо, поскольку это плохо переводится в SQL и не будет иметь четкого значения.
+
+- Pickling/Кэширование. См. следующий раздел для получения подробной информации о том, что происходит при pickling QuerySets. Для целей этого раздела важно, чтобы результаты считывались из базы данных.
+
+- repr(). QuerySet вычисляется, когда вы вызываете repr() для него. Это удобно для интерактивного интерпретатора Python, поэтому вы можете сразу увидеть свои результаты при интерактивном использовании API.
+
+- len(). QuerySet вычисляется, когда вы вызываете len() для него. Это, как вы могли ожидать, возвращает длину списка результатов.
+
+Примечание. Если вам нужно только определить количество записей в наборе (и вам не нужны фактические объекты), гораздо эффективнее обрабатывать количество на уровне базы данных, используя SQL SELECT COUNT (*). Именно по этой причине Django предоставляет метод count().
+
+- bool(). Тестирование QuerySet в логическом контексте, например, с использованием bool(), or, and или оператора if, вызовет выполнение запроса. Если есть хотя бы один результат, QuerySet равен True, иначе False. Например:
+- list(). Принудительное вычисление QuerySet путем вызова list() для него. Например: entry_list = list(Entry.objects.all())
+
+```
+if Entry.objects.filter(headline="Test"):
+```
+
+## Url адреса с передачей id
+
+```
+ path('post/<int:pk>/', views.post_detail, name='post_detail'),
+```  
+Обращение к URL адресу в шаблоне
+```python
+<a href="{% url "list_item:list_item" pk=list.id %}">
+```
+
+"<int:pk>"  означает, что Django ожидает целочисленное значение и преобразует его в представление — переменную pk.
+
+# УРОК №6
+## Django form
+### Регистрация и логин
+https://docs.djangoproject.com/en/3.0/ref/forms/api/
+- Новое **application** для регистрации пользователей
+- Форма регистрации пользователя
+```python
+class CustomUserCreationForm(UserCreationForm):
+    """
+    Форма регистрации нового пользователя.
+    С обязательными полями: ['username', 'password', 'email']
+    """
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email',)
+```
+
+- Шаблон формы регистрации + csrf 
+
+```python
+ <form class="registration_form_class" action="{% url "registration:registration" %}" id="registration_form" method="POST">
+   {% csrf_token %}
+    <p class="form_class_name-field"> Имя</p>
+      {{ form.username }}
+    <p class="form_class_name-field">e-mail</p>
+      {{ form.email }}
+    <p class="form_class_name-field"> Пароль</p>
+      {{ form.password1}}
+    <p class="form_class_name-field">Подтверждение пароля</p>
+        {{ form.password2}}
+</form>
+```
+- Форма Логина
+```python
+class LoginForm(forms.Form):
+
+    login = forms.CharField(
+        required=True,
+        max_length=64,
+        widget=forms.TextInput(attrs={'id': 'input_field_email-id'})
+    )
+    password = forms.CharField(
+        required=True,
+        max_length=64,
+        widget=forms.PasswordInput()
+    )
+```
+- View обработка регистрационных данных
+```python
+def create_user(request):
+    form = CustomUserCreationForm()
+
+    if request.method == 'POST':
+        form = CustomUserCreationForm(data=request.POST)
+        success_url = reverse('main:main')
+
+        if form.is_valid():
+            form.save()
+            return redirect(success_url)
+
+    return render(request, 'registration.html', {'form': form})
+```  
+- View для логина
+```python
+def login_view(request):
+    """
+    Контроллер, который рендерит страницу авторизации.
+    В случае успешной авторизации редиректит на главную
+    """
+    form = LoginForm()
+
+    if request.method == 'POST':
+        form = LoginForm(data=request.POST)
+        success_url = reverse('main:main')
+
+        if form.is_valid():
+            username = form.cleaned_data.get('login')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+
+            if user and user.is_active:
+                login(request, user)
+                return redirect(success_url)
+
+    return render(request, 'login.html', {'form': form})
+```
+- Форма нового списка
+```python
+class ListForm(forms.ModelForm):
+    """
+    Форма списка
+    """
+    name = forms.CharField(widget=forms.TextInput())
+
+    class Meta:
+        model = ListModel
+        fields = ('name', 'user')
+```
+- view нового списка
+```python
+def create_new_list(request):
+    """
+    Обработка запроса на создание нового списка
+    """
+    form = ListForm()
+    success_url = reverse('main:main')
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        form = ListForm({
+            'name': name,
+            'user': request.user
+        })
+
+        if form.is_valid():
+            form.save()
+
+            return redirect(success_url)
+
+        form = ListForm()
+
+    return render(request, new_list_item.html, {'form': form})
+```
+- Ошибки валидации (non_field_error)
+```python
+error_messages = {
+    NON_FIELD_ERRORS: {
+        'unique_together': "Имя уже существует",
+    }
+}
+```
+- Декоратор \ декоратор с параметром для проверки пользователя а аутентификацию
+
+## Д\З
+- Форма создания нового 'элемента списка' (кнопка "+")
+- Вьюха создания нового 'элемента списка'
+- Шаблон создания 'элемента списка'
+- *Декоратор для логина
