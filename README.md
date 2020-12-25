@@ -650,7 +650,7 @@ def login_view(request):
 
     return render(request, 'login.html', {'form': form})
 ```
-- ПОДСКАЗКА К ДЗ => Форма нового списка
+- Форма нового списка
 ```python
 class ListForm(forms.ModelForm):
     """
@@ -662,10 +662,43 @@ class ListForm(forms.ModelForm):
         model = ListModel
         fields = ('name', 'user')
 ```
+- view нового списка
+```python
+def create_new_list(request):
+    """
+    Обработка запроса на создание нового списка
+    """
+    form = ListForm()
+    success_url = reverse('main:main')
 
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        form = ListForm({
+            'name': name,
+            'user': request.user
+        })
+
+        if form.is_valid():
+            form.save()
+
+            return redirect(success_url)
+
+        form = ListForm()
+
+    return render(request, new_list_item.html, {'form': form})
+```
+- Ошибки валидации (non_field_error)
+```python
+error_messages = {
+    NON_FIELD_ERRORS: {
+        'unique_together': "Имя уже существует",
+    }
+}
+```
+- Декоратор \ декоратор с параметром для проверки пользователя а аутентификацию
 
 ## Д\З
-
-- Форма создания нового списка дел (кнопка "+")
-- Вьюха создания нового списка
-- Шаблон создания нового списка
+- Форма создания нового 'элемента списка' (кнопка "+")
+- Вьюха создания нового 'элемента списка'
+- Шаблон создания 'элемента списка'
+- *Декоратор для логина
