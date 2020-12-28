@@ -7,7 +7,11 @@
 {% block name_list %}
     <div class="table-data_table-header-item-1">{{ list_name }}</div>
 {% endblock %}
-
+{% block create %}
+    <a class="add_new_list" href="{% url 'item:create' pk=pk %}">
+        <div class="header__button-create-bundle">+</div>
+    </a>
+{% endblock %}
  {% block body %}
     {% for list in lists %}
         <div class="table-data__table-row">
@@ -28,8 +32,8 @@
                 </a>
             </div>
             <div class="calendarik">
-                {% if list.date %}
-                    {{ list.date }}
+                {% if list.expare_date %}
+                    {{ list.expare_date | date:"SHORT_DATE_FORMAT" }}
                 {% else %}
                     <a href='#'>
                         <img src="/static/images/calendar.png" alt="calendar" width="26px" height="24px">

@@ -8,6 +8,11 @@
     <div class="table-data_table-header-item-1">TO DO List</div>
 {% endblock %}
 
+{% block create %}
+    <a class="add_new_list" href="{% url 'main:create' %}">
+        <div class="header__button-create-bundle">+</div>
+    </a>
+{% endblock %}
  {% block body %}
     {% for row in lists %}
         <div class="table-data__table-row">
@@ -20,7 +25,7 @@
             </div>
             <div class="buttons">
                 <div class="table-data-two_table-icon">
-                    <a href='#'>
+                    <a href='{% url 'main:edit' pk=row.id %}'>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
                              xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" clip-rule="evenodd"
