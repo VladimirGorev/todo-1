@@ -702,3 +702,141 @@ error_messages = {
 - Вьюха создания нового 'элемента списка'
 - Шаблон создания 'элемента списка'
 - *Декоратор для логина
+
+# УРОК №7
+- разбор ДЗ
+```python
+from django.urls import reverse_lazy
+
+
+def login_decorator(url):
+    def wrapper(func):
+        def wrapper2(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                return func(request, *args, **kwargs)
+            else:
+                return redirect(url)
+
+        return wrapper2
+
+    return wrapper
+
+
+@login_decorator(url=reverse_lazy('registration:login'))
+def main_view(request):
+    lists = ListModel.objects.filter(
+        user=request.user,
+    )
+    context = {
+        'lists': lists,
+        'user_name': request.user.username
+    }
+    return render(request, 'index.html', context)
+
+```
+- локализация ошибок
+```python
+import traceback
+
+def main_view(request):
+    
+    try:
+        lists = ListModel.objects.filter(
+            user=request.user,
+        )
+        context = {
+            'lists': lists,
+            'user_name': request.user.username
+        }
+        return render(request, 'index.html', context)
+    except:
+        print(traceback.format_exc(limit=10))
+        raise
+```
+
+- Полезная ссылка по работе браузеров  
+
+https://developer.mozilla.org/
+
+- форма редактирования списка
+```python
+@login_required(login_url=reverse_lazy('registration:login'))
+def edit_view(request, pk):
+    list_ = ListModel.objects.get(id=pk)
+
+    if request.method == 'POST':
+        form = ListForm({
+            'user': request.user,
+            'name': request.POST.get('name')
+        }, instance=list_)
+
+        if form.is_valid():
+            success_url = reverse('main:main')
+            form.save()
+            return redirect(success_url)
+    else:
+        form = ListForm(instance=list_)
+
+    context = {
+        'form': form,
+        'pk': pk
+    }
+
+    return render(request, 'edit_list.html', context)
+```
+
+- удаление списка
+- пагинация
+```python
+from django.core.paginator import Paginator
+from django.core.paginator import EmptyPage
+from django.core.paginator import PageNotAnInteger
+
+PAGE_COUNT = 6
+def view_with_pagination(request):
+    context = {}
+    lists = ListModel.objects.filter(
+        user=request.user,
+    ).order_by(
+        'created'
+    )
+    paginator = Paginator(lists, PAGE_COUNT)
+    page = request.GET.get('page')
+
+    try:
+        list_page = paginator.page(page)
+    except PageNotAnInteger:
+        list_page = paginator.page(1)
+    except EmptyPage:
+        list_page = paginator.page(paginator.num_pages)
+
+    context['lists'] = list_page
+    context['pages'] = list(paginator.page_range)
+    context['user'] = request.user.username
+
+    return render(request, 'index.html', context)
+```
+отрисовка в шаблоне
+```python
+{% if pages.1 %}
+        <div class="table-data__table-row">
+            <div class="paginator_class">
+                <ul class="pagination-wrapper_button">
+                    {% for page in pages %}
+                        <li><a class="active" href="/?page={{ page }}">{{ page }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+```
+
+Новый css стиль
+```css
+.paginator_class {
+  grid-column: 2/3;
+  width: 200px;
+  word-break: break-all;
+  margin-left: 50px; }
+```
+
