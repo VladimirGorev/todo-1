@@ -5,7 +5,7 @@ from todo_item.models import ListItem
 class ItemForm(forms.ModelForm):
 
     expare_date = forms.DateField(
-        widget=forms.DateInput(format='%d-%m-%Y', attrs={'type': 'date'}),
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         required=False
     )
 

@@ -56,5 +56,11 @@ def edit_view(request, pk):
         'form': form,
         'pk': pk
     }
-
     return render(request, 'edit_list.html', context)
+
+
+@login_required(login_url=reverse_lazy('registration:login'))
+def delete_view(request, pk):
+    ListModel.objects.get(id=pk).delete()
+    success_url = reverse('main:main')
+    return redirect(success_url)

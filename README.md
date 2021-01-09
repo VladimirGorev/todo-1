@@ -812,6 +812,9 @@ def edit_view(request, pk):
 # УРОК 8
 - удаление списка
 - пагинация
+- Generic
+
+## Пагинация (разбиение контента на страницы)
 ```python
 from django.core.paginator import Paginator
 from django.core.paginator import EmptyPage
@@ -864,4 +867,5 @@ def view_with_pagination(request):
   word-break: break-all;
   margin-left: 50px; }
 ```
+## Generic
 
