@@ -839,24 +839,28 @@ def view_with_pagination(request):
         list_page = paginator.page(paginator.num_pages)
 
     context['lists'] = list_page
-    context['pages'] = list(paginator.page_range)
+    context['paginator'] = paginator
     context['user'] = request.user.username
 
     return render(request, 'index.html', context)
 ```
 отрисовка в шаблоне
 ```python
-{% if pages.1 %}
-        <div class="table-data__table-row">
-            <div class="paginator_class">
-                <ul class="pagination-wrapper_button">
-                    {% for page in pages %}
+{% if is_paginated %}
+    <div class="table-data__table-row">
+        <div class="paginator_class">
+            <ul class="pagination-wrapper_button">
+                {% for page in paginator.page_range %}
+                    {% if page_obj.number == page %}
                         <li><a class="active" href="/?page={{ page }}">{{ page }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
+                    {% else %}
+                        <li><a href="/?page={{ page }}">{{ page }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
         </div>
-    {% endif %}
+    </div>
+{% endif %}
 ```
 
 Новый css стиль
@@ -868,4 +872,40 @@ def view_with_pagination(request):
   margin-left: 50px; }
 ```
 ## Generic
+Документация  
 
+https://developer.mozilla.org/ru/docs/Learn/Server-side/Django/Generic_views
+
+https://docs.djangoproject.com/en/3.1/ref/class-based-views/generic-editing/#createview
+
+### ListView
+```python
+class MainView(generic.ListView):
+
+    model = ListModel
+    template_name = 'index.html'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_name'] = self.request.user.username
+        return context
+```
+### CreateView
+```python
+class CreateView(generic.CreateView):
+    model = ListModel
+    template_name = 'new_list.html'
+    form_class = ListForm
+    success_url = reverse_lazy('main:main')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        query_dict = copy(kwargs['data'])
+        query_dict['user'] = self.request.user
+        kwargs['data'] = query_dict
+        return kwargs
+```
