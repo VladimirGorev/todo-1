@@ -918,3 +918,8 @@ class CreateView(LoginRequiredMixin, generic.CreateView):
 
         return kwargs
 ```
+
+## ДЗ
+- Переделать **item_view** на generic.ListView
+- Cделать пагинцию в шаблоне list.html
+- Переделать **create_view** в todo_item на generic.CreateView 
