@@ -7,4 +7,6 @@ def get_count(lists):
     """
     Возвращает список - количество, для генераци пустых блоков
     """
-    return range(DIV_COUNT - len(lists))
+    if lists:
+        return range(DIV_COUNT - len(lists))
+    return []

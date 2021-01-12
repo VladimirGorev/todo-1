@@ -34,7 +34,7 @@
                         </svg>
                     </a>
                 </div>
-                <a class="delete_button" href="#">
+                <a class="delete_button" href="{% url 'main:delete' pk=row.id %}">
                     <div class="table-row_table_icon">
                         <svg width="20" height="22" viewBox="0 0 20 22" fill="none"
                              xmlns="http://www.w3.org/2000/svg">
@@ -55,5 +55,21 @@
             <div class="table-row_table_cell-1"></div>
         </div>
     {% endfor %}
+
+    {% if is_paginated %}
+        <div class="table-data__table-row">
+            <div class="paginator_class">
+                <ul class="pagination-wrapper_button">
+                    {% for page in paginator.page_range %}
+                        {% if page_obj.number == page %}
+                            <li><a class="active" href="{% url 'main:main' %}?page={{ page }}">{{ page }}</a></li>
+                        {% else %}
+                            <li><a href="{% url 'main:main' %}?page={{ page }}">{{ page }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 

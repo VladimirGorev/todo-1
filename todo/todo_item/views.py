@@ -2,6 +2,7 @@ from django.shortcuts import render, reverse, redirect
 from todo_item.models import ListItem
 from main.models import ListModel
 from todo_item.forms import ItemForm
+from django.http import HttpResponse
 
 
 def item_view(request, pk):
@@ -38,3 +39,44 @@ def create_view(request, pk):
         'pk': pk
     }
     return render(request, 'new_item.html', context)
+
+
+def edit_item_view(request, pk):
+    item = ListItem.objects.get(id=pk)
+
+    if request.method == 'POST':
+        form = ItemForm(
+            data={
+                'name': request.POST['name'],
+                'expare_date': request.POST['expare_date'],
+                'list_model': item.list_model
+            },
+            instance=item
+        )
+
+        if form.is_valid():
+            success_url = reverse('item:item', kwargs={'pk': item.list_model_id})
+            form.save()
+            return redirect(success_url)
+    else:
+        form = ItemForm(instance=item)
+
+    context = {
+        'form': form,
+        'pk': pk,
+        'list_model_id': item.list_model_id
+    }
+    return render(request, 'edit_item.html', context)
+
+
+def delete_item_view(request, pk):
+    item = ListItem.objects.filter(
+        id=pk,
+        list_model__user=request.user
+    ).first()
+
+    if item:
+        item.delete()
+        success_url = reverse('item:item', kwargs={'pk': item.list_model_id})
+        return redirect(success_url)
+    return HttpResponse(status=404)
