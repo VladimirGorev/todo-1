@@ -2,6 +2,7 @@ from django.shortcuts import render, reverse, redirect
 from todo_item.models import ListItem
 from main.models import ListModel
 from todo_item.forms import ItemForm
+from django.http import HttpResponse
 
 
 def item_view(request, pk):
@@ -73,6 +74,9 @@ def delete_item_view(request, pk):
         id=pk,
         list_model__user=request.user
     ).first()
-    item.delete()
-    success_url = reverse('item:item', kwargs={'pk': item.list_model_id})
-    return redirect(success_url)
+
+    if item:
+        item.delete()
+        success_url = reverse('item:item', kwargs={'pk': item.list_model_id})
+        return redirect(success_url)
+    return HttpResponse(status=404)

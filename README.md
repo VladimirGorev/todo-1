@@ -810,38 +810,37 @@ def edit_view(request, pk):
 ```
 
 # УРОК 8
-- удаление списка
 - пагинация
 - Generic
 
 ## Пагинация (разбиение контента на страницы)
 ```python
 from django.core.paginator import Paginator
-from django.core.paginator import EmptyPage
-from django.core.paginator import PageNotAnInteger
 
-PAGE_COUNT = 6
-def view_with_pagination(request):
-    context = {}
+PAGE = 6
+
+@login_required(login_url=reverse_lazy('registration:login'))
+def main_view(request):
     lists = ListModel.objects.filter(
         user=request.user,
-    ).order_by(
-        'created'
-    )
-    paginator = Paginator(lists, PAGE_COUNT)
+    ).order_by('created')
+
+    paginator = Paginator(lists, PAGE)
+
     page = request.GET.get('page')
+    if not page:
+        page = 1
 
-    try:
-        list_page = paginator.page(page)
-    except PageNotAnInteger:
-        list_page = paginator.page(1)
-    except EmptyPage:
-        list_page = paginator.page(paginator.num_pages)
+    is_paginated = len(lists) > PAGE
+    page_obj = paginator.page(page)
 
-    context['lists'] = list_page
-    context['paginator'] = paginator
-    context['user'] = request.user.username
-
+    context = {
+        'listmodel_list': page_obj.object_list,
+        'user_name': request.user.username,
+        'paginator': paginator,
+        'is_paginated': is_paginated,
+        'page_obj': page_obj
+    }
     return render(request, 'index.html', context)
 ```
 отрисовка в шаблоне
@@ -852,9 +851,9 @@ def view_with_pagination(request):
             <ul class="pagination-wrapper_button">
                 {% for page in paginator.page_range %}
                     {% if page_obj.number == page %}
-                        <li><a class="active" href="/?page={{ page }}">{{ page }}</a></li>
+                        <li><a class="active" href="{% url 'main:main' %}?page={{ page }}">{{ page }}</a></li>
                     {% else %}
-                        <li><a href="/?page={{ page }}">{{ page }}</a></li>
+                        <li><a href="{% url 'main:main' %}?page={{ page }}">{{ page }}</a></li>
                     {% endif %}
                 {% endfor %}
             </ul>
@@ -880,10 +879,14 @@ https://docs.djangoproject.com/en/3.1/ref/class-based-views/generic-editing/#cre
 
 ### ListView
 ```python
-class MainView(generic.ListView):
+class MainView(LoginRequiredMixin, generic.ListView):
 
+    login_url = reverse_lazy('registration:login')
     model = ListModel
     template_name = 'index.html'
+    paginate_by = 6
+    ordering = ['created', 'name']
+    context_object_name = 'lists'
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -896,16 +899,22 @@ class MainView(generic.ListView):
 ```
 ### CreateView
 ```python
-class CreateView(generic.CreateView):
+class CreateView(LoginRequiredMixin, generic.CreateView):
+
     model = ListModel
     template_name = 'new_list.html'
     form_class = ListForm
     success_url = reverse_lazy('main:main')
+    login_url = reverse_lazy('registration:login')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        query_dict = copy(kwargs['data'])
-        query_dict['user'] = self.request.user
-        kwargs['data'] = query_dict
+        query_dict = kwargs.get('data')
+
+        if query_dict:
+            query_dict = copy(query_dict)
+            query_dict['user'] = self.request.user
+            kwargs['data'] = query_dict
+
         return kwargs
 ```

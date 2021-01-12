@@ -14,7 +14,7 @@
     </a>
 {% endblock %}
  {% block body %}
-    {% for row in listmodel_list %}
+    {% for row in lists %}
         <div class="table-data__table-row">
             <div class="table-row_table_cell-1">
                 {% if row.is_done %}
@@ -50,7 +50,7 @@
 {% endblock %}
 
 {% block empty %}
-    {% for _ in listmodel_list|get_count %}
+    {% for _ in lists|get_count %}
         <div class="table-data__table-row">
             <div class="table-row_table_cell-1"></div>
         </div>
@@ -62,9 +62,9 @@
                 <ul class="pagination-wrapper_button">
                     {% for page in paginator.page_range %}
                         {% if page_obj.number == page %}
-                            <li><a class="active" href="/?page={{ page }}">{{ page }}</a></li>
+                            <li><a class="active" href="{% url 'main:main' %}?page={{ page }}">{{ page }}</a></li>
                         {% else %}
-                            <li><a href="/?page={{ page }}">{{ page }}</a></li>
+                            <li><a href="{% url 'main:main' %}?page={{ page }}">{{ page }}</a></li>
                         {% endif %}
                     {% endfor %}
                 </ul>

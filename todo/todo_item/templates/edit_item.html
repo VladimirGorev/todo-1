@@ -8,9 +8,14 @@
 
 {% block form %}
     <form class="auth_form_class" action="{% url 'item:edit' pk %}" id="auth_form" method="POST">
-      {% csrf_token %}
-      {{ form.name }}
-      {{ form.expare_date }}
+    {% csrf_token %}
+    {{ form.name }}
+    {{ form.expare_date }}
+
+    {% if form.errors %}
+      {{ form.non_field_errors }}
+    {% endif %}
+
     </form>
 {% endblock %}
 
