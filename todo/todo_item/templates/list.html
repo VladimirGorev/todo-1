@@ -20,9 +20,9 @@
     {% for list in lists %}
         <div class="table-data__table-row">
         {% if list.is_done %}
-            <div class="table-row_table_cell-1 is_done_text"> {{ list.name }}</div>
+            <div id="{{ list.id }}" class="table-row_table_cell-1 is_done_text"> {{ list.name }}</div>
         {% else %}
-            <div class="table-row_table_cell-1"> {{ list.name }}</div>
+            <div id="{{ list.id }}" class="table-row_table_cell-1"> {{ list.name }}</div>
         {% endif %}
         <div class="buttons">
             <div class="table-data-two_table-icon">
@@ -66,4 +66,64 @@
             <div class="table-row_table_cell-1"></div>
         </div>
     {% endfor %}
+{% endblock %}
+
+{% block js %}
+<script>
+const rows = document.querySelectorAll('.table-row_table_cell-1');
+const csrftoken = getCookie('csrftoken');
+const delUrl = '/item/is_done/';
+
+rows.forEach(
+    row => {
+        if (row.innerText) {
+            row.addEventListener('click', isDoneRequest);
+        }
+    }
+);
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function isDoneRequest (event) {
+    console.log('click');
+    const id = event.currentTarget.id;
+
+    return fetch(delUrl, {
+        method: 'POST',
+        headers: new Headers({'X-CSRFToken': csrftoken}),
+        redirect: 'follow',
+        body: JSON.stringify({id: id})
+    }).then(
+        respone => {
+            if (respone.status === 201) {
+                if (event.target.classList.contains('is_done_text')) {
+                    event.target.classList.remove('is_done_text');
+                } else {
+                    event.target.classList.add('is_done_text');
+                }
+            } else {
+                alert('Сервер не доступен');
+            }
+        }
+    )
+}
+
+</script>
+
+
 {% endblock %}

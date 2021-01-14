@@ -15,6 +15,11 @@ class ListItem(models.Model):
     def __str__(self):
         return f'@id={self.id}@name={self.name}@list={self.list_model.name}'
 
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        super().save()
+        # TODO Написать логику, когда у list_model тоже нужно поменять атрибут is_done
+
     class Meta:
         verbose_name = 'Элемент списка'
         verbose_name_plural = 'Элементы списка'

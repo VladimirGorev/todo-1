@@ -919,7 +919,145 @@ class CreateView(LoginRequiredMixin, generic.CreateView):
         return kwargs
 ```
 
-## ДЗ
+
+# УРОК 9
+
+## План занятия:
+- Dom-дерево (document)
+- события
+
+https://learn.javascript.ru/introduction-browser-events
+- объект event
+
+https://learn.javascript.ru/obtaining-event-object
+
+- Ассинхронный запрос fetch
+    - Функция зачеркивания
+    - Функция удаления  (через пост запрос)
+- Получение csrf токена из JS
+- Дебаг в браузере
+
+## Dom-дерево
+![dom](img/dom.png)
+
+https://learn.javascript.ru/dom-nodes  
+
+Виртуальный DOM  
+https://habr.com/ru/post/256965/
+
+## JavaScript - работа c элементами дерева
+- Ассинхронный запрос fetch
+    - Функция зачеркивания
+    - Функция удаления  (через пост запрос)
+    
+https://learn.javascript.ru/fetch
+
+- Получение csrf токена из JS
+- Дебаг в браузере
+```javascript
+//Получение csrf tokena из cookie
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(
+                    cookie.substring(name.length + 1)
+                );
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+```
+- Функция зачеркивания
+```css
+.table-row_table_cell-1 {
+    cursor: pointer;
+}
+```
+```javascript
+// Добавление удаление css класса
+const element = document.getElementById("div1");
+element.classList.add("otherclass");
+element.classList.remove("otherclass");
+```
+```javascript
+function isDoneRequest(event) {
+    const id = event.target.id.split('_').pop();
+    const listId = document.location.href.split('/').pop();
+    const url = document.location.href.replace(`/${listId}`, '/done/');
+    return fetch(url, {
+        method: 'POST',
+        headers: new Headers({'X-CSRFToken': token}),
+        redirect: 'follow',
+        body: JSON.stringify({id: id})
+    }).then(respone => {
+        if (respone.status === 201) {
+            if (event.target.classList.contains('is_done_text')) {
+                event.target.classList.remove('is_done_text');
+            } else {
+                event.target.classList.add('is_done_text');
+            }
+        } else {
+            alert('Сервер не доступен');
+        }
+    })
+}
+```
+
+### Получение в JS данных из контекста
+```javascript
+const delUrl = JSON.parse('{{ del_url|safe }}');
+```
+
+### Функция удаления
+```javascript
+const delButtons = document.querySelectorAll('.delete_button');
+
+delButtons.forEach(button => {
+    button.addEventListener('click', delUrl(genFunc));
+});
+
+function DeleteRequest(event) {
+    event.preventDefault();
+    const url = event.currentTarget.href;
+    const pk = url.split('/').pop();
+    const listId = generateFunc(pk);
+    return fetch(url, {
+        method: 'POST',
+        headers: new Headers({'X-CSRFToken': csrftoken}),
+        redirect: 'follow'
+    }).then(
+        response => {
+            if (response.status === 200) {
+                document.getElementById(listId).remove();
+            }
+        }
+    );
+}
+```
+- Создание HTML блока средствами js
+```javascript
+function createMessageBlock(title, text) {
+    const divBlock = document.createElement('div');
+    divBlock.className = 'wrapper__auth';
+    divBlock.id = "id_new_edit_block";
+    divBlock.innerHTML = `<div class="auth__column_right"><div class="auth__column_right_form"><div class="auth__column_right_form__header">${ title }</div><div id="message_text"> ${ text }</div><div class="auth__column_right__form_footer"><label class="form_footer_button-submit"><input type="submit" form="auth_form" value="" style="display: none"><a href="#" id="login-submit-btn"><div class="auth__button_submit"  ><span>&#10004</span></div></a></label><label class="form_footer_button-cancel"><a href="#" id="cancel_btn"><div class="auth__button_submit" id="login-cancel-btn" ><span>&#9587</span></div></a></label></div></div></div>`;
+    return divBlock;
+}
+```
+## ДЗ 
 - Переделать **item_view** на generic.ListView
 - Cделать пагинцию в шаблоне list.html
 - Переделать **create_view** в todo_item на generic.CreateView 
+- Прочитать статьи про DOM.
+
+- *Написать логику, зачеркивания Списка, когда 
+  Переопределив метод save() в модели элементов списка.
+- **Функция удаления элемента списка на JS
