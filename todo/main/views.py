@@ -19,9 +19,7 @@ def main_view(request):
 
     paginator = Paginator(lists, PAGE)
 
-    page = request.GET.get('page')
-    if not page:
-        page = 1
+    page = request.GET.get('page', 1)
 
     is_paginated = len(lists) > PAGE
     page_obj = paginator.page(page)
