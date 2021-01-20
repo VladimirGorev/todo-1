@@ -18,7 +18,15 @@ class ListItem(models.Model):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         super().save()
-        # TODO Написать логику, когда у list_model тоже нужно поменять атрибут is_done
+
+        items = ListItem.objects.filter(list_model=self.list_model)
+
+        if all([item.is_done for item in items]):
+            self.list_model.is_done = True
+            self.list_model.save()
+        else:
+            self.list_model.is_done = False
+            self.list_model.save()
 
     class Meta:
         verbose_name = 'Элемент списка'

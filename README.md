@@ -1061,3 +1061,237 @@ function createMessageBlock(title, text) {
 - *Написать логику, зачеркивания Списка, когда 
   Переопределив метод save() в модели элементов списка.
 - **Функция удаления элемента списка на JS
+
+
+# Урок 9
+
+## ТЕСТЫ
+### Виды тестирования (как тестировать)
+- Автоматизированное
+```
+– это выполнение плана тестирования (частей вашего приложения, 
+которые вы хотите протестировать, а так же порядок, в котором вы хотите их тестировать, 
+и ожидаемые результаты) с помощью сценария тестирования
+```
+- Ручное
+```
+Чтобы получить полный набор ручных тестов, все, что вам нужно сделать, 
+это составить список всех функций, которыми обладает ваше приложение, 
+список различных типов входных данных, которые оно может принять, 
+и все ожидаемые результаты. 
+Теперь, каждый раз, когда вы будете вносите изменения в свой код, 
+вам нужно просмотреть каждый элемент в этом списке и проверить его правильность.
+
+Это не похоже на веселье, не так ли?
+```
+### Виды тестирования (что тестировать)
+- Регрессионное тестирование
+```
+Мы тестируем продукт на его работоспособность после внесения изменений в функциональность.
+```
+- Unit (модульное) тестирование
+```
+Мы также тестируем на корректность отдельные компоненты (модули) программы.
+```
+- Интеграционное тестирование
+```
+Мы проверяем на корректность взаимодействия между компонентами одной системы и правильности обработки информации.
+```
+- Дымовое тестирование
+```
+Мы также проводим цикл тестов на проверку функциональности программного 
+продукта после его сборки (добавления нового кода либо исправления ошибок в коде).
+В случае использования метода непрерывной интеграции (Continious Integration) 
+сборка программного продукта производится ежедневно, 
+поэтому проведение дымового тестирования позволяет вовремя выявить и устранить критичные ошибки, 
+тем самым сэкономив время на тестирование сборки.
+```
+
+- Тестирование безопасности
+```
+Наша команда тестирует продукты на наличие уязвимостей в безопасности программного обеспечения, 
+в частности безопасности подключений, безопасности данных и безопасности доступа.
+```
+
+- Системное тестирование
+```
+Для того, чтобы убедиться в том, что интегрированная и готовая к эксплуатации система 
+соответствует заявленным функциональным требованиям, мы проводим системное тестирование.
+```
+- Тестирование процесса инсталляции
+```
+Мы анализируем ресурсы, необходимые для установки программного обеспечения, 
+корректность регистрации программы в операционной системе, 
+поведение программы при ее обновлении, корректность деинсталяции программы и пр.
+```
+- Стресс-тестирование (Пример яндекс-танк)
+```
+Мы также проводим тестирование на отказ системы и ее способность к восстановлению при возникновении сбоев.
+```
+- Юзабилити-тестирование
+```
+Мы проверяем продукт на удобство и простоту использования путем имитации поведения 
+пользователей либо посредством экспертной оценки результатов тестирования юзабилити продукта фокус группой.
+```
+
+## Функциональное тестирование (**Selenium**, **Pytest**)  
+
+Веб-драйвры selenium  
+
+https://chromedriver.storage.googleapis.com/index.html?path=86.0.4240.22/
+
+https://github.com/mozilla/geckodriver/releases
+
+- Установка 
+```
+pip install selenium
+pip install pytest-django
+```
+- pytest.ini
+```
+[pytest]
+DJANGO_SETTINGS_MODULE = todo_list_ngu.settings
+```
+
+Настрйка запуска тестов в pycharm
+
+![pytest](img/pytest.png)
+
+- Тестовый сценрий ввода логина и пароля и перехода на главную
+```python
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as es
+import time
+
+
+TEST_CLIENT = {
+    'username': 'TestUser',
+    'email': '123@123.ru',
+    'password': 'q1w2e3r4TT',
+}
+
+
+def test_open_login_page(live_server, new_client):
+    """
+    Новый пользователь Юля, открывает
+    браузер и решает ввести 'http://127.0.0.1:8000/'.
+    Попадает на страницу с title 'Войти' и надписью ВХОД
+    Вводит тестовый логин и пароль и переходит на главную
+    """
+    browser = webdriver.Chrome('C:\\todo_list_ngu\\todo_list_ngu\chromedriver.exe')
+    browser.get(live_server.url)
+    assert browser.title == 'Войти'
+    login = browser.find_element_by_name('login')
+    password = browser.find_element_by_name('password')
+    login.send_keys(TEST_CLIENT['username'])
+    password.send_keys(TEST_CLIENT['password'])
+
+    button = browser.find_element_by_id('login-submit-btn')
+    button.click()
+
+    # WebDriverWait(browser, 3).until(es.title_is('Главная'))
+    time.sleep(3)
+    assert browser.title == 'Главная'
+```
+- Pytest фикстуры
+```python
+import pytest
+from django.contrib.auth.models import User
+
+
+TEST_CLIENT = {
+    'username': 'TestUser',
+    'email': '123@123.ru',
+    'password': 'q1w2e3r4TT',
+}
+
+
+@pytest.fixture
+def new_client(db):
+    new_client = User(
+        username=TEST_CLIENT['username'],
+        email=TEST_CLIENT['email'],
+    )
+    new_client.set_password(TEST_CLIENT['password'])
+    new_client.save()
+    return new_client
+```
+
+# УРОК 10
+
+## Unit и интеграционные тесты
+- Тестирование view
+```python
+@pytest.mark.django_db
+def test_save_new_list_post_request_(client, new_client):
+    """
+    Проверка вьюхи создание нового списка дел
+    """
+    csrf_client = Client(enforce_csrf_checks=True)
+    csrf_client.login(
+        username=new_client.username, password=TEST_CLIENT['password']
+    )
+    csrf_client.get(reverse('main:create'))
+    csrf = csrf_client.cookies['csrftoken']
+    response = csrf_client.post('/create/', data={
+        'name': 'Тестовый список дел',
+        'csrfmiddlewaretoken': csrf.value
+    })
+    assert response.status_code == 302, response.content.decode()
+
+```
+
+- Тестирование form
+- Тестирование моделей
+```python
+@pytest.mark.django_db
+def test_save_method(new_list):
+    """ Тест метода save в модели ListItem """
+    list_item = ListItem.objects.create(
+        name='Какое то дело',
+        list=new_list
+    )
+    assert new_list.is_done is False
+    list_item.is_done = True
+    list_item.save()
+    assert new_list.is_done
+    list_item.is_done = False
+    list_item.save()
+    assert new_list.is_done is False
+```
+
+## Тестовое покрытие (Пример travis)
+Мы проверяем, насколько набор проводимых тестов соответствует требованиям к продукту, 
+а также анализируем полноту проверки тестами кода разработанной части продукта.  
+
+```python
+pip install pytest-cov
+```
+## TDD и BDD
+- ТDD
+ 
+![tdd](img/tdd.png)
+
+- BDD => Cucumber/Behave
+https://habr.com/ru/post/216923/  
+
+```
+FEATURE 1: На счету есть деньги+
+GIVEN счет с деньгами
+AND валидную карточку
+AND банкомат с наличными
+WHEN клиент запрашивает наличные
+THEN убедиться, что со счета было списание
+AND убедиться, что наличные выданы
+AND убедиться, что карточка возвращена
+```
+
+### Рекомендации по литературе
+Персиваль - TDD
+
+## ДЗ
+- Тест **list_item_view**
+- Тест **create_item_view** 
+- Тест c Selenium на создание нового списка дел
+- ***Решить проблему с пагинацией

@@ -3,25 +3,81 @@ from todo_item.models import ListItem
 from main.models import ListModel
 from todo_item.forms import ItemForm
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import generic
+from copy import copy
 import json
 
 
+class ItemView(LoginRequiredMixin, generic.ListView):
+    login_url = reverse_lazy('registration:login')
+    model = ListItem
+    template_name = 'list.html'
+    paginate_by = 6
+    ordering = ['created', 'name']
+    context_object_name = 'lists'
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        queryset = super().get_queryset()
+        return queryset.filter(list_model_id=pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+        list_ = ListModel.objects.select_related('user').get(id=pk)
+        context['user_name'] = list_.user.username
+        context['list_name'] = list_.name
+        context['pk'] = pk
+        return context
+
+
+@login_required(login_url=reverse_lazy('registration:login'))
 def item_view(request, pk):
     list_ = ListModel.objects.select_related('user').get(id=pk)
     list_items = ListItem.objects.filter(list_model=list_)
-
-    del_url = reverse('item:is_done')
 
     context = {
         'lists': list_items,
         'user_name': list_.user.username,
         'list_name': list_.name,
         'pk': pk,
-        'del_url': del_url,
     }
     return render(request, 'list.html', context)
 
 
+class CreateItemView(LoginRequiredMixin, generic.CreateView):
+    model = ListItem
+    template_name = 'new_item.html'
+    form_class = ItemForm
+    login_url = reverse_lazy('registration:login')
+
+    def get_success_url(self):
+        pk = self.kwargs.get('pk')
+        return reverse('item:item', kwargs={'pk': pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs.get('pk')
+        context['pk'] = pk
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        query_dict = kwargs.get('data')
+        pk = self.kwargs.get('pk')
+
+        if query_dict:
+            query_dict = copy(query_dict)
+            query_dict['list_model'] = pk
+            kwargs['data'] = query_dict
+
+        return kwargs
+
+
+@login_required(login_url=reverse_lazy('registration:login'))
 def create_view(request, pk):
     form = ItemForm()
 
@@ -45,6 +101,7 @@ def create_view(request, pk):
     return render(request, 'new_item.html', context)
 
 
+@login_required(login_url=reverse_lazy('registration:login'))
 def edit_item_view(request, pk):
     item = ListItem.objects.get(id=pk)
 
@@ -73,6 +130,7 @@ def edit_item_view(request, pk):
     return render(request, 'edit_item.html', context)
 
 
+@login_required(login_url=reverse_lazy('registration:login'))
 def delete_item_view(request, pk):
     item = ListItem.objects.filter(
         id=pk,
@@ -86,6 +144,7 @@ def delete_item_view(request, pk):
     return HttpResponse(status=404)
 
 
+@login_required(login_url=reverse_lazy('registration:login'))
 def is_done_item_view(request):
     body = json.loads(request.body.decode())
     id_ = int(body.get('id', 0))
