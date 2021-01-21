@@ -45,7 +45,7 @@
                 {% endif %}
             </div>
             <div class="table-row_table_icon">
-                <a class="delete_button" href="{% url 'item:delete' list.id %}">
+                <a id="{{ list.id }}" class="delete_button" href="#">
                     <svg width="20" height="22" viewBox="0 0 20 22" fill="none"
                          xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" clip-rule="evenodd"
@@ -66,13 +66,31 @@
             <div class="table-row_table_cell-1"></div>
         </div>
     {% endfor %}
+
+    {% if is_paginated %}
+        <div class="table-data__table-row">
+            <div class="paginator_class">
+                <ul class="pagination-wrapper_button">
+                    {% for page in paginator.page_range %}
+                        {% if page_obj.number == page %}
+                            <li><a class="active" href="{% url 'item:item' pk %}?page={{ page }}">{{ page }}</a></li>
+                        {% else %}
+                            <li><a href="{% url 'item:item' pk %}?page={{ page }}">{{ page }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block js %}
 <script>
 const rows = document.querySelectorAll('.table-row_table_cell-1');
-const csrftoken = getCookie('csrftoken');
-const delUrl = '/item/is_done/';
+
+const successUrl = '{% url 'item:item' pk %}';
+const isDoneUrl = '{% url "item:is_done" %}';
+const delUrl = '{% url "item:delete" %}';
 
 rows.forEach(
     row => {
@@ -82,28 +100,13 @@ rows.forEach(
     }
 );
 
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
 
 
 function isDoneRequest (event) {
     console.log('click');
     const id = event.currentTarget.id;
 
-    return fetch(delUrl, {
+    return fetch(isDoneUrl, {
         method: 'POST',
         headers: new Headers({'X-CSRFToken': csrftoken}),
         redirect: 'follow',
