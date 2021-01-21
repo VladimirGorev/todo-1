@@ -1223,22 +1223,52 @@ def new_client(db):
 ## Unit и интеграционные тесты
 - Тестирование view
 ```python
+from django.test import Client
+from django.shortcuts import reverse
+import pytest
+
+TEST_CLIENT = {
+    'username': 'TestUser',
+    'email': '123@123.ru',
+    'password': 'q1w2e3r4TT',
+}
+
+
+TEST_ITEM = 'Тестовый список дел'
+
+
 @pytest.mark.django_db
-def test_save_new_list_post_request_(client, new_client):
+def test_create_new_list(new_user):
     """
     Проверка вьюхи создание нового списка дел
     """
     csrf_client = Client(enforce_csrf_checks=True)
     csrf_client.login(
-        username=new_client.username, password=TEST_CLIENT['password']
+        username=new_user.username,
+        password=TEST_CLIENT['password'],
     )
-    csrf_client.get(reverse('main:create'))
+    response = csrf_client.get(reverse('main:create'))
+
+    html = response.content.decode()
+
+    assert '<title>Новый список</title>' in html
+
     csrf = csrf_client.cookies['csrftoken']
-    response = csrf_client.post('/create/', data={
-        'name': 'Тестовый список дел',
-        'csrfmiddlewaretoken': csrf.value
-    })
-    assert response.status_code == 302, response.content.decode()
+    response = csrf_client.post(
+        reverse('main:create'),
+        data={
+            'name': TEST_ITEM,
+            'csrfmiddlewaretoken': csrf.value
+        })
+    url = response.url
+
+    assert response.status_code == 302
+
+    response = csrf_client.get(url)
+    html = response.content.decode()
+
+    assert TEST_ITEM in html
+
 
 ```
 
@@ -1268,6 +1298,12 @@ def test_save_method(new_list):
 ```python
 pip install pytest-cov
 ```
+Поправить файл 
+```python
+[pytest]
+DJANGO_SETTINGS_MODULE = todo.settings
+addopts = --nomigrations --cov=. --cov-report=html
+```
 ## TDD и BDD
 - ТDD
  
@@ -1294,4 +1330,4 @@ AND убедиться, что карточка возвращена
 - Тест **list_item_view**
 - Тест **create_item_view** 
 - Тест c Selenium на создание нового списка дел
-- ***Решить проблему с пагинацией
+- *Довести покрытие тестов до 80%

@@ -4,9 +4,11 @@ from main.models import ListModel
 from main.forms import ListForm
 from django.contrib.auth.decorators import login_required
 from django.views import generic
+from django.http import HttpResponse
 from copy import copy
 from django.core.paginator import Paginator
 from django.contrib.auth.mixins import LoginRequiredMixin
+import json
 
 PAGE = 6
 
@@ -113,7 +115,10 @@ def edit_view(request, pk):
 
 
 @login_required(login_url=reverse_lazy('registration:login'))
-def delete_view(request, pk):
-    ListModel.objects.get(id=pk).delete()
-    success_url = reverse('main:main')
-    return redirect(success_url)
+def delete_view(request):
+    body = json.loads(request.body.decode())
+    id_ = int(body.get('id', 0))
+    if id_:
+        ListModel.objects.get(id=id_).delete()
+        return HttpResponse(status=201)
+    return HttpResponse(status=404)
