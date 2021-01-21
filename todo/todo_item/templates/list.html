@@ -45,7 +45,7 @@
                 {% endif %}
             </div>
             <div class="table-row_table_icon">
-                <a class="delete_button" href="{% url 'item:delete' list.id %}">
+                <a id="{{ list.id }}" class="delete_button" href="#">
                     <svg width="20" height="22" viewBox="0 0 20 22" fill="none"
                          xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" clip-rule="evenodd"
@@ -86,9 +86,21 @@
 
 {% block js %}
 <script>
-const rows = document.querySelectorAll('.table-row_table_cell-1');
+const rows = document.querySelectorAll('.delete_button');
+const deleteButtons = document.querySelectorAll('.delete_button');
 const csrftoken = getCookie('csrftoken');
-const isDoneUrl = '/item/is_done/';
+
+console.log(deleteButtons);
+
+deleteButtons.forEach(deleteButton => {
+        console.log('add handler');
+        deleteButton.addEventListener('click', deleteItem);
+    }
+);
+
+const successUrl = '{% url 'item:item' pk %}';
+const isDoneUrl = '{% url "item:is_done" %}';
+const delUrl = '{% url "item:delete" %}';
 
 rows.forEach(
     row => {
@@ -114,6 +126,26 @@ function getCookie(name) {
     return cookieValue;
 }
 
+
+function deleteItem(event) {
+    console.log('click')
+    event.preventDefault();
+    const id = event.currentTarget.id
+    return fetch(delUrl, {
+        method: 'POST',
+        headers: new Headers({'X-CSRFToken': csrftoken}),
+        redirect: 'follow',
+        body: JSON.stringify({id: id})
+    }).then(
+        response => {
+            if (response.status === 201) {
+                document.location.href = successUrl;
+            } else {
+                alert("Сервер недоступен");
+            }
+        }
+    )
+}
 
 function isDoneRequest (event) {
     console.log('click');

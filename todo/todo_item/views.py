@@ -131,16 +131,18 @@ def edit_item_view(request, pk):
 
 
 @login_required(login_url=reverse_lazy('registration:login'))
-def delete_item_view(request, pk):
+def delete_item_view(request):
+    body = json.loads(request.body.decode())
+    id_ = int(body.get('id', 0))
+
     item = ListItem.objects.filter(
-        id=pk,
+        id=id_,
         list_model__user=request.user
     ).first()
 
     if item:
         item.delete()
-        success_url = reverse('item:item', kwargs={'pk': item.list_model_id})
-        return redirect(success_url)
+        return HttpResponse(status=201)
     return HttpResponse(status=404)
 
 

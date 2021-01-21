@@ -34,7 +34,7 @@
                         </svg>
                     </a>
                 </div>
-                <a class="delete_button" href="{% url 'main:delete' pk=row.id %}">
+                <a class="delete_button" href="#">
                     <div class="table-row_table_icon">
                         <svg width="20" height="22" viewBox="0 0 20 22" fill="none"
                              xmlns="http://www.w3.org/2000/svg">
@@ -73,3 +73,10 @@
     {% endif %}
 {% endblock %}
 
+{% block js %}
+<script>
+const successUrl = '{% url 'main:main' %}';
+const delUrl = '{% url "main:delete" %}';
+
+</script>
+{% endblock %}
